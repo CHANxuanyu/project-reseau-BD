@@ -321,41 +321,36 @@ VALUES
 
 -- Caesar Salad
 INSERT INTO plat_ingredient (id_plat, id_stock, quantite) VALUES
-(1, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Lettuce'), 0.2),
-(1, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Tomato'), 0.1),
-(1, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Caesar Dressing'), 0.05);
+(2, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Lettuce'), 0.2),
+(2, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Tomato'), 0.1),
+(2, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Caesar Dressing'), 0.05);
 
 -- Grilled Beef Steak
 INSERT INTO plat_ingredient (id_plat, id_stock, quantite) VALUES
-(2, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Beef'), 0.25);
+(3, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Beef'), 0.25);
 
 -- Cheeseburger
 INSERT INTO plat_ingredient (id_plat, id_stock, quantite) VALUES
-(3, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Beef'), 0.15),
-(3, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Bread'), 1),
-(3, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Cheese'), 0.05);
+(4, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Beef'), 0.15),
+(4, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Bread'), 1),
+(4, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Cheese'), 0.05);
 
 -- Spaghetti Bolognese
 INSERT INTO plat_ingredient (id_plat, id_stock, quantite) VALUES
-(4, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Pasta'), 0.2),
-(4, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Beef'), 0.1),
-(4, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Cheese'), 0.05);
-
--- Margherita Pizza
-INSERT INTO plat_ingredient (id_plat, id_stock, quantite) VALUES
-(5, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Mozzarella'), 0.15),
-(5, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Tomato'), 0.2);
-
--- Chicken Noodle Soup
-INSERT INTO plat_ingredient (id_plat, id_stock, quantite) VALUES
-(6, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Chicken'), 0.15),
-(6, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Noodles'), 0.1);
+(5, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Pasta'), 0.2),
+(5, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Beef'), 0.1),
+(5, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Cheese'), 0.05);
 
 -- Turkey Sandwich
 INSERT INTO plat_ingredient (id_plat, id_stock, quantite) VALUES
-(7, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Turkey'), 0.1),
-(7, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Bread'), 1),
-(7, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Lettuce'), 0.05);
+(6, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Turkey'), 0.1),
+(6, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Bread'), 1),
+(6, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Lettuce'), 0.05);
+
+-- Chicken Noodle Soup
+INSERT INTO plat_ingredient (id_plat, id_stock, quantite) VALUES
+(7, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Chicken'), 0.15),
+(7, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Noodles'), 0.1);
 
 -- French Fries
 INSERT INTO plat_ingredient (id_plat, id_stock, quantite) VALUES
