@@ -1,10 +1,11 @@
 -- Création de la table Utilisateur
+CREATE TYPE role_type AS ENUM ('client', 'admin', 'serveur');
 CREATE TABLE utilisateur (
     id_utilisateur SERIAL PRIMARY KEY,
     nom_utilisateur VARCHAR(100) NOT NULL CHECK (LENGTH(nom_utilisateur) <= 100),
     email VARCHAR(150) NOT NULL CHECK (email LIKE '%@%.%'),
-    mot_de_passe VARCHAR(255) NOT NULL CHECK (LENGTH(mot_de_passe) >= 60),
-    role ENUM('client', 'admin', 'serveur') NOT NULL CHECK (role IN ('client', 'admin', 'serveur')),
+    mot_de_passe VARCHAR(255) NOT NULL CHECK (LENGTH(mot_de_passe) >= 8),
+    role role_type NOT NULL,
     date_inscription DATE NOT NULL CHECK (date_inscription <= CURRENT_DATE),
     telephone VARCHAR(15) NULL CHECK (telephone IS NULL OR telephone ~ '^\d{10}$'),
     photo BYTEA NULL
@@ -25,7 +26,7 @@ CREATE TABLE admin (
     niveau_acces INTEGER NOT NULL CHECK (niveau_acces >= 1 AND niveau_acces <= 5),
     departement VARCHAR(50) NULL CHECK (departement IS NULL OR LENGTH(departement) <= 50),
     date_derniere_connexion TIMESTAMP NULL CHECK (date_derniere_connexion <= CURRENT_TIMESTAMP),
-    ip_autorise VARCHAR(15) NULL CHECK (ip_autorise IS NULL OR ip_autorise ~ '^([0-9]{1,3}\\.){3}[0-9]{1,3}$')
+    ip_autorise VARCHAR(15) NULL CHECK (ip_autorise IS NULL OR ip_autorise ~ '^([01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.(?:([01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])\.){2}([01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])$')
 );
 
 -- Création de la table Serveur
@@ -47,16 +48,27 @@ CREATE TABLE table_restaurant (
 );
 
 -- Création de la table Reservation
+-- 创建枚举类型
+CREATE TYPE statut_type AS ENUM ('confirmée', 'en attente', 'annulée');
+
+-- 创建表
 CREATE TABLE reservation (
     id_reservation SERIAL PRIMARY KEY,
-    id_utilisateur INT NOT NULL REFERENCES client(id_utilisateur),
+    id_utilisateur INT NOT NULL REFERENCES utilisateur(id_utilisateur),
     date_reservation DATE NOT NULL CHECK (date_reservation >= CURRENT_DATE),
     heure_reservation TIME NOT NULL CHECK (heure_reservation >= '09:00' AND heure_reservation <= '23:59'),
-    statut ENUM('confirmée', 'en attente', 'annulée') NOT NULL CHECK (statut IN ('confirmée', 'en attente', 'annulée')),
+    statut statut_type NOT NULL,
     nombre_personnes INTEGER NOT NULL CHECK (nombre_personnes > 0)
 );
 
 
+-- Création de la table Fournisseur
+CREATE TABLE fournisseur (
+    id_fournisseur SERIAL PRIMARY KEY,
+    nom_fournisseur VARCHAR(100) NOT NULL UNIQUE,
+    contact_fournisseur VARCHAR(100) NOT NULL UNIQUE,
+    produits_fournis TEXT NULL
+);
 
 -- Création de la table Inventaire_de_stock
 CREATE TABLE inventaire_de_stock (
@@ -69,13 +81,7 @@ CREATE TABLE inventaire_de_stock (
 );
 
 
--- Création de la table Fournisseur
-CREATE TABLE fournisseur (
-    id_fournisseur SERIAL PRIMARY KEY,
-    nom_fournisseur VARCHAR(100) NOT NULL UNIQUE,
-    contact_fournisseur VARCHAR(100) NOT NULL UNIQUE,
-    produits_fournis TEXT NULL
-);
+
 
 -- Création de la table Facture
 CREATE TABLE facture (
@@ -86,23 +92,33 @@ CREATE TABLE facture (
     mode_paiement VARCHAR(50) NOT NULL
 );
 
--- Création de la table commande
-CREATE TABLE commande (
-    id_reservation INT NOT NULL REFERENCES reservation(id_reservation),
-    id_plat INT NOT NULL REFERENCES plat(id_plat),
-    quantite INTEGER NOT NULL CHECK (quantite >= 1)
-    PRIMARY KEY (id_reservation, id_plat)
-);
 
 -- Création de la table plat
 CREATE TABLE plat (
     id_plat SERIAL PRIMARY KEY,
     id_stock INT NOT NULL REFERENCES inventaire_de_stock(id_stock),
-    quantite INTEGER NOT NULL CHECK (quantite >= 1)
+    quantite INTEGER NOT NULL CHECK (quantite >= 1),
     nom_plat VARCHAR(100) NOT NULL UNIQUE,
     description TEXT NULL,
     prix_plat DECIMAL(10, 2) NOT NULL CHECK (prix_plat >= 0)
 );
+
+CREATE TABLE plat_ingredient (
+    id_plat INT NOT NULL REFERENCES plat(id_plat),     -- 关联到菜品
+    id_stock INT NOT NULL REFERENCES inventaire_de_stock(id_stock), -- 关联到库存的食材
+    quantite DECIMAL(10, 2) NOT NULL CHECK (quantite > 0), -- 每道菜所需的食材数量
+    PRIMARY KEY (id_plat, id_stock) -- 复合主键确保每种菜与食材的唯一性
+);
+
+
+-- Création de la table commande
+CREATE TABLE commande (
+    id_reservation INT NOT NULL REFERENCES reservation(id_reservation),
+    id_plat INT NOT NULL REFERENCES plat(id_plat),
+    quantite INTEGER NOT NULL CHECK (quantite >= 1),
+    PRIMARY KEY (id_reservation, id_plat)
+);
+
 
 -- Création de la table Avis_clients
 CREATE TABLE avis_clients (
@@ -120,6 +136,8 @@ CREATE TABLE reserver (
     id_table INT NOT NULL REFERENCES table_restaurant(id_table) ON DELETE CASCADE,
     PRIMARY KEY (id_reservation, id_table)
 );
+
+
 
 
 -- Créer des fonctions de déclenchement
@@ -145,7 +163,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_calcule_total_facture
 AFTER INSERT OR UPDATE ON commande
 FOR EACH ROW
-EXECUTE FUNCTION calcule_total_facture();
+EXECUTE PROCEDURE calcule_total_facture();
 
 
 
@@ -177,7 +195,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_verifier_stock
 BEFORE INSERT ON commande
 FOR EACH ROW
-EXECUTE FUNCTION verifier_stock();
+EXECUTE PROCEDURE verifier_stock();
 
 
 
@@ -190,19 +208,18 @@ VALUES
 
 INSERT INTO client (id_utilisateur, points_fidelite, preferences_alimentaires, derniere_visite, statut_vip)
 VALUES 
-(1, 100, 'Vegan', '2024-02-25', TRUE),
-(1, 50, 'Vegetarian', '2024-02-20', FALSE);
+(2, 100, 'Vegan', '2024-02-25', TRUE);
 
 
 INSERT INTO admin (id_utilisateur, niveau_acces, departement, date_derniere_connexion, ip_autorise)
 VALUES 
-(2, 3, 'IT', '2024-03-01 12:34:56', '192.168.1.1');
+(3, 3, 'IT', '2024-03-01 12:34:56', '192.168.1.1');
 
 
 
 INSERT INTO serveur (id_utilisateur, numero_badge, zone_service, horaires_travail, specialite, date_embauche)
 VALUES 
-(3, 'SRV123', 'Zone A', 'Mon-Fri 09:00-17:00', 'Beverages', '2024-02-05');
+(4, 'SRV123', 'Zone A', 'Mon-Fri 09:00-17:00', 'Beverages', '2024-02-05');
 
 
 INSERT INTO table_restaurant (numero_table, capacite, disponible)
@@ -214,8 +231,8 @@ VALUES
 
 INSERT INTO reservation (id_utilisateur, date_reservation, heure_reservation, statut, nombre_personnes)
 VALUES 
-(1, '2024-03-05', '12:30', 'confirmée', 3),
-(1, '2024-03-06', '18:00', 'en attente', 2);
+(2, '2024-12-05', '12:30', 'confirmée', 3),
+(2, '2024-12-06', '18:00', 'en attente', 2);
 
 
 
@@ -252,46 +269,26 @@ VALUES
     ('Mint', 30, 3, 'kg',1);
 
 
-
-
-
-
-INSERT INTO facture (id_reservation, date_facture, mode_paiement)
+INSERT INTO plat (id_stock, quantite, nom_plat, description, prix_plat)
 VALUES 
-(1, '2024-03-05', 'Carte de crédit'),
-(2, '2024-03-06', 'Espèces');
-
-INSERT INTO commande (id_reservation, id_plat, quantite)
-VALUES
-(1, 1, 2),
-(1, 2, 1),
-(2, 3, 1),
-(2, 4, 2),
-(2, 5, 1),
-(2, 6, 1);
-
-
-INSERT INTO plat (nom_plat, description, prix_plat)
-VALUES 
-('Caesar Salad', 'Fresh salad with lettuce, tomato, and Caesar dressing', 10.50),
-('Grilled Beef Steak', 'Juicy steak with seasoning', 20.00),
-('Cheeseburger', 'Classic burger with cheese and fries', 12.75),
-('Spaghetti Bolognese', 'Pasta with meat sauce and parmesan cheese', 15.25),
-('Margherita Pizza', 'Classic pizza with tomato sauce and mozzarella cheese', 14.00),
-('Chicken Noodle Soup', 'Homemade soup with chicken and noodles', 8.75),
-('Turkey Sandwich', 'Fresh sandwich with turkey, lettuce, and tomato', 9.50),
-('French Fries', 'Crispy fries with ketchup', 5.00),
-('Chocolate Cake', 'Rich chocolate cake with frosting', 7.50),
-('Iced Tea', 'Refreshing iced tea with lemon', 3.00),
-('Cappuccino', 'Italian coffee with frothy milk', 4.50),
-('Green Tea', 'Japanese green tea with antioxidants', 3.50),
-('Orange Juice', 'Freshly squeezed orange juice', 4.00),
-('Lager Beer', 'Light beer with a crisp taste', 5.00),
-('Chardonnay Wine', 'White wine with fruity notes', 8.00),
-('Mojito Cocktail', 'Refreshing cocktail with rum and mint', 10.00),
-('Scotch Whiskey', 'Aged whiskey with a smoky flavor', 12.00),
-('Vodka Martini', 'Classic cocktail with vodka and vermouth', 9.00),
-('Rum Punch', 'Tropical cocktail with rum and fruit juice', 8.50);
+    (1, 10, 'Caesar Salad', 'Fresh salad with lettuce, tomato, and Caesar dressing', 10.50),
+    (2, 20, 'Grilled Beef Steak', 'Juicy steak with seasoning', 20.00),
+    (3, 15, 'Cheeseburger', 'Classic burger with cheese and fries', 12.75),
+    (4, 25, 'Spaghetti Bolognese', 'Pasta with meat sauce and parmesan cheese', 15.25),
+    (5, 10, 'Turkey Sandwich', 'Fresh sandwich with turkey, lettuce, and tomato', 9.50),
+    (6, 30, 'Chicken Noodle Soup', 'Homemade soup with chicken and noodles', 8.75),
+    (7, 20, 'French Fries', 'Crispy fries with ketchup', 5.00),
+    (8, 10, 'Chocolate Cake', 'Rich chocolate cake with frosting', 7.50),
+    (9, 15, 'Iced Tea', 'Refreshing iced tea with lemon', 3.00),
+    (10, 5, 'Cappuccino', 'Italian coffee with frothy milk', 4.50),
+    (11, 10, 'Green Tea', 'Japanese green tea with antioxidants', 3.50),
+    (12, 25, 'Orange Juice', 'Freshly squeezed orange juice', 4.00),
+    (13, 10, 'Lager Beer', 'Light beer with a crisp taste', 5.00),
+    (14, 20, 'Chardonnay Wine', 'White wine with fruity notes', 8.00),
+    (15, 30, 'Mojito Cocktail', 'Refreshing cocktail with rum and mint', 10.00),
+    (16, 10, 'Scotch Whiskey', 'Aged whiskey with a smoky flavor', 12.00),
+    (17, 5, 'Vodka Martini', 'Classic cocktail with vodka and vermouth', 9.00),
+    (18, 10, 'Rum Punch', 'Tropical cocktail with rum and fruit juice', 8.50);
 
 
 
@@ -385,12 +382,37 @@ INSERT INTO plat_ingredient (id_plat, id_stock, quantite) VALUES
 (19, (SELECT id_stock FROM inventaire_de_stock WHERE nom_produit = 'Orange'), 0.1);
 
 
-INSERT INTO avis_clients (id_utilisateur, id_reservation, note, commentaire, date_avis)
+
+
+
+INSERT INTO facture (id_reservation, date_facture, mode_paiement)
 VALUES 
-(1, 1, 5, 'Excellent service and food quality!', '2024-03-05 14:30:00'),
-(1, 2, 3, 'Food was good but service could be faster.', '2024-03-06 20:00:00');
+(2, '2024-12-05', 'Carte de crédit'),
+(3, '2024-12-06', 'Espèces');
+
+
+
+
+INSERT INTO commande (id_reservation, id_plat, quantite)
+VALUES
+    (2, 2, 2),
+    (2, 3, 1),
+    (2, 4, 1),
+    (3, 5, 2),
+    (3, 6, 1),
+    (3, 7, 1);
+
+
+
+
+
+
+--INSERT INTO avis_clients (id_utilisateur, id_reservation, note, commentaire, date_avis)
+--VALUES 
+--(1, 1, 5, 'Excellent service and food quality!', '2024-12-05 22:30:00'),
+--(1, 2, 3, 'Food was good but service could be faster.', '2024-12-06 20:00:00');
 
 INSERT INTO reserver (id_reservation, id_table)
 VALUES 
-(1, 1),
-(2, 2);
+(2, 1),
+(3, 2);

@@ -5,9 +5,9 @@ import psycopg2
 db_params = {
     "host": "localhost",
     "port": "5432",
-    "user": "chan",
-    "password": "******",
-    "dbname": "Restaurant"
+    "user": "postgres",
+    "password": "20021231",
+    "dbname": "restaurant"
 }
 
 # server network parameter
