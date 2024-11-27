@@ -74,8 +74,8 @@ CREATE TABLE fournisseur (
 CREATE TABLE inventaire_de_stock (
     id_stock SERIAL PRIMARY KEY,
     nom_produit VARCHAR(100) NOT NULL UNIQUE,
-    quantite INTEGER NOT NULL CHECK (quantite >= 0),
-    seuil_minimum INTEGER NOT NULL CHECK (seuil_minimum >= 0),
+    quantite NUMERIC NOT NULL CHECK (quantite >= 0),
+    seuil_minimum NUMERIC NOT NULL CHECK (seuil_minimum >= 0),
     unite VARCHAR(20) NOT NULL,
     id_fournisseur INT NOT NULL REFERENCES fournisseur(id_fournisseur)
 );
@@ -196,6 +196,33 @@ CREATE TRIGGER trigger_verifier_stock
 BEFORE INSERT ON commande
 FOR EACH ROW
 EXECUTE PROCEDURE verifier_stock();
+
+
+CREATE OR REPLACE FUNCTION deduct_stock_on_order()
+RETURNS TRIGGER AS $$
+DECLARE
+    ingredient_record RECORD;
+BEGIN
+    -- First, find the dish ingredients for the ordered dish
+    FOR ingredient_record IN 
+        SELECT pi.id_stock, pi.quantite * NEW.quantite AS total_required
+        FROM plat_ingredient pi
+        WHERE pi.id_plat = NEW.id_plat
+    LOOP
+        -- Update the stock, subtracting the required quantity
+        UPDATE inventaire_de_stock
+        SET quantite = quantite - ingredient_record.total_required
+        WHERE id_stock = ingredient_record.id_stock;
+    END LOOP;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_stock_after_order
+AFTER INSERT ON commande
+FOR EACH ROW
+EXECUTE PROCEDURE deduct_stock_on_order();
 
 
 
