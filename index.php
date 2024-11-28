@@ -2,14 +2,22 @@
 // index.php
 session_start();
 
-// Check if the user is logged in
 if (isset($_SESSION['id_utilisateur'])) {
-    // Redirect to the dashboard
+    // If the user is already logged in, redirect to the dashboard
     header('Location: dashboard.php');
-    exit;
-} else {
-    // Redirect to the login page
-    header('Location: login.php');
     exit;
 }
 ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenue au Restaurant</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <h1>Bienvenue au Restaurant</h1>
+    <p>Veuillez vous connecter ou vous inscrire pour continuer.</p>
+    <a href="login.php">Se connecter</a> | <a href="register.php">S'inscrire</a>
+</body>
+</html>

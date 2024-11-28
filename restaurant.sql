@@ -129,6 +129,11 @@ CREATE TABLE avis_clients (
     commentaire TEXT NULL,
     date_avis TIMESTAMP NOT NULL
 );
+CREATE SEQUENCE avis_clients_id_avis_seq;
+ALTER TABLE avis_clients 
+ALTER COLUMN id_avis SET DEFAULT nextval('avis_clients_id_avis_seq');
+SELECT setval('avis_clients_id_avis_seq', 1, false);
+
 
 -- Création de la table reserver n-n association entre Reservation et Table_Restaurant
 CREATE TABLE reserver (

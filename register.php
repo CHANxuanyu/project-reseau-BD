@@ -1,17 +1,9 @@
-<!-- register.php -->
-<form action="register.php" method="post">
-    <input type="text" name="nom_utilisateur" placeholder="Nom d'utilisateur" required>
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="password" name="mot_de_passe" placeholder="Mot de passe" required>
-    <button type="submit">S'inscrire</button>
-</form>
-
 <?php
 // register.php
 require 'db.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $nom_utilisateur = $_POST['nom_utilisateur'];
+    $nom_utilisateur = trim($_POST['nom_utilisateur']);
     $email = strtolower(trim($_POST['email']));
     $mot_de_passe = password_hash($_POST['mot_de_passe'], PASSWORD_BCRYPT);
     $role = 'client';
@@ -32,3 +24,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Inscription</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <h1>Inscription</h1>
+    <?php if (isset($error)) echo '<p>' . htmlspecialchars($error) . '</p>'; ?>
+    <form action="register.php" method="post">
+        <label for="nom_utilisateur">Nom d'utilisateur :</label>
+        <input type="text" name="nom_utilisateur" id="nom_utilisateur" required>
+        <br><br>
+        <label for="email">Email :</label>
+        <input type="email" name="email" id="email" required>
+        <br><br>
+        <label for="mot_de_passe">Mot de passe :</label>
+        <input type="password" name="mot_de_passe" id="mot_de_passe" required>
+        <br><br>
+        <button type="submit">S'inscrire</button>
+    </form>
+    <p>Déjà inscrit ? <a href="login.php">Se connecter</a></p>
+</body>
+</html>
