@@ -1,9 +1,9 @@
 <?php
 // db.php
-$host = 'localhost';
-$db   = 'restaurant';
-$user = 'postgres';
-$pass = '20021231';
+$host = 'postgresql-chanxuanyu.alwaysdata.net';
+$db   = 'chanxuanyu_restaurant';
+$user = 'chanxuanyu';
+$pass = 'Chan030903';
 $dsn = "pgsql:host=$host;dbname=$db";
 
 try {
