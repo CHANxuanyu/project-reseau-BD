@@ -54,7 +54,7 @@ $stocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <tr>
                 <form action="admin_inventory.php" method="post">
                     <td><?php echo $stock['id_stock']; ?></td>
-                    <td><?php echo htmlspecialchars($stock['nom_article']); ?></td>
+                    <td><?php echo htmlspecialchars($stock['nom_produit']); ?></td>
                     <td>
                         <input type="number" step="0.01" name="quantite" value="<?php echo $stock['quantite']; ?>" min="0" required>
                     </td>
